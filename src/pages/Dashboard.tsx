@@ -5,56 +5,58 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Trophy, Clock, Users, PlayCircle } from "lucide-react";
+import { BookOpen, Trophy, Clock, Users, PlayCircle, Download } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 const Dashboard = () => {
-  // Mock user data - replace with actual user data
-  const user = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    joinDate: "January 2024",
-    enrolledCourses: 3,
-    completedCourses: 1,
-    certificatesEarned: 1,
-    totalLearningTime: "45 hours"
+  const [user, setUser] = useState<any>(null);
+  const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Get actual user data from localStorage
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+      
+      // Get enrolled courses data
+      const enrolledData = localStorage.getItem("enrolledCourses");
+      if (enrolledData) {
+        setEnrolledCourses(JSON.parse(enrolledData));
+      }
+    }
+  }, []);
+
+  const generateCertificate = (courseId: string) => {
+    // Mock certificate generation
+    const courseName = enrolledCourses.find(c => c.id === courseId)?.title || "Course";
+    const certData = {
+      courseId,
+      courseName,
+      studentName: user?.name,
+      completionDate: new Date().toLocaleDateString(),
+      certificateId: `CERT-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+    };
+    
+    // In a real app, this would generate a PDF
+    const blob = new Blob([JSON.stringify(certData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `certificate-${courseName.replace(/\s+/g, '-').toLowerCase()}.json`;
+    a.click();
   };
 
-  const enrolledCourses = [
-    {
-      id: 1,
-      title: "Web Development Fundamentals",
-      progress: 75,
-      nextLesson: "JavaScript Functions",
-      totalLessons: 12,
-      completedLessons: 9,
-      instructor: "Sarah Johnson"
-    },
-    {
-      id: 2,
-      title: "Digital Marketing Basics",
-      progress: 30,
-      nextLesson: "Social Media Strategy",
-      totalLessons: 8,
-      completedLessons: 2,
-      instructor: "Mike Chen"
-    },
-    {
-      id: 3,
-      title: "Data Analysis with Excel",
-      progress: 100,
-      nextLesson: "Course Completed",
-      totalLessons: 10,
-      completedLessons: 10,
-      instructor: "Lisa Wang"
-    }
-  ];
+  if (!user) {
+    return <div>Loading...</div>;
+  }
 
   const achievements = [
-    { title: "First Course Completed", description: "Completed your first course", earned: true },
-    { title: "Quick Learner", description: "Completed 3 lessons in one day", earned: true },
+    { title: "First Course Completed", description: "Completed your first course", earned: enrolledCourses.some(c => c.progress === 100) },
+    { title: "Quick Learner", description: "Completed 3 lessons in one day", earned: enrolledCourses.length >= 1 },
     { title: "Dedicated Student", description: "Studied for 7 consecutive days", earned: false },
-    { title: "Course Master", description: "Completed 5 courses", earned: false }
+    { title: "Course Master", description: "Completed 5 courses", earned: enrolledCourses.filter(c => c.progress === 100).length >= 5 }
   ];
 
   return (
@@ -72,28 +74,28 @@ const Dashboard = () => {
           <Card>
             <CardContent className="p-6 text-center">
               <BookOpen className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-              <div className="text-2xl font-bold">{user.enrolledCourses}</div>
+              <div className="text-2xl font-bold">{enrolledCourses.length}</div>
               <div className="text-sm text-muted-foreground">Enrolled Courses</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6 text-center">
               <Trophy className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
-              <div className="text-2xl font-bold">{user.completedCourses}</div>
+              <div className="text-2xl font-bold">{enrolledCourses.filter(c => c.progress === 100).length}</div>
               <div className="text-sm text-muted-foreground">Completed</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6 text-center">
               <Badge className="h-8 w-8 mx-auto mb-2 text-green-500" />
-              <div className="text-2xl font-bold">{user.certificatesEarned}</div>
+              <div className="text-2xl font-bold">{enrolledCourses.filter(c => c.progress === 100).length}</div>
               <div className="text-sm text-muted-foreground">Certificates</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6 text-center">
               <Clock className="h-8 w-8 mx-auto mb-2 text-purple-500" />
-              <div className="text-2xl font-bold">{user.totalLearningTime}</div>
+              <div className="text-2xl font-bold">{enrolledCourses.length * 15} hours</div>
               <div className="text-sm text-muted-foreground">Learning Time</div>
             </CardContent>
           </Card>
@@ -105,47 +107,67 @@ const Dashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle>My Courses</CardTitle>
-                <CardDescription>Continue learning where you left off</CardDescription>
+                <CardDescription>
+                  {enrolledCourses.length > 0 ? "Continue learning where you left off" : "No courses enrolled yet. Browse courses to get started!"}
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  {enrolledCourses.map((course) => (
-                    <div key={course.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h3 className="font-semibold mb-1">{course.title}</h3>
-                          <p className="text-sm text-muted-foreground">by {course.instructor}</p>
+                {enrolledCourses.length > 0 ? (
+                  <div className="space-y-6">
+                    {enrolledCourses.map((course) => (
+                      <div key={course.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h3 className="font-semibold mb-1">{course.title}</h3>
+                            <p className="text-sm text-muted-foreground">by {course.instructor}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Badge variant={course.progress === 100 ? "default" : "secondary"}>
+                              {course.progress === 100 ? "Completed" : "In Progress"}
+                            </Badge>
+                            {course.progress === 100 && (
+                              <Button size="sm" variant="outline" onClick={() => generateCertificate(course.id)}>
+                                <Download className="h-4 w-4 mr-1" />
+                                Certificate
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                        <Badge variant={course.progress === 100 ? "default" : "secondary"}>
-                          {course.progress === 100 ? "Completed" : "In Progress"}
-                        </Badge>
-                      </div>
-                      
-                      <div className="mb-3">
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>Progress</span>
-                          <span>{course.progress}%</span>
+                        
+                        <div className="mb-3">
+                          <div className="flex justify-between text-sm mb-1">
+                            <span>Progress</span>
+                            <span>{course.progress}%</span>
+                          </div>
+                          <Progress value={course.progress} className="h-2" />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {Math.floor(course.totalLessons * course.progress / 100)}/{course.totalLessons} lessons completed
+                          </p>
                         </div>
-                        <Progress value={course.progress} className="h-2" />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {course.completedLessons}/{course.totalLessons} lessons completed
-                        </p>
-                      </div>
 
-                      <div className="flex justify-between items-center">
-                        <div className="text-sm">
-                          <strong>Next:</strong> {course.nextLesson}
+                        <div className="flex justify-between items-center">
+                          <div className="text-sm">
+                            <strong>Next:</strong> {course.progress === 100 ? "Course Completed!" : course.nextLesson}
+                          </div>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link to={`/course/${course.id}`}>
+                              <PlayCircle className="mr-2 h-4 w-4" />
+                              {course.progress === 100 ? "Review" : "Continue"}
+                            </Link>
+                          </Button>
                         </div>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link to={`/course/${course.id}`}>
-                            <PlayCircle className="mr-2 h-4 w-4" />
-                            {course.progress === 100 ? "Review" : "Continue"}
-                          </Link>
-                        </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <BookOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground mb-4">You haven't enrolled in any courses yet.</p>
+                    <Button asChild>
+                      <Link to="/courses">Browse Courses</Link>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

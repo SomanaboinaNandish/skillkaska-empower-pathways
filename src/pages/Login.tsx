@@ -22,7 +22,17 @@ const Login = () => {
     // Mock authentication - replace with actual auth logic
     setTimeout(() => {
       if (email && password) {
-        localStorage.setItem("user", JSON.stringify({ email, name: "John Doe" }));
+        // Store actual user data instead of hardcoded values
+        const userData = {
+          email,
+          name: email === "demo@skillkaska.org" ? "Demo User" : email.split('@')[0],
+          joinDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+          enrolledCourses: [],
+          completedCourses: [],
+          certificates: [],
+          progress: {}
+        };
+        localStorage.setItem("user", JSON.stringify(userData));
         toast.success("Welcome back! You've successfully logged in.");
         navigate("/dashboard");
       } else {

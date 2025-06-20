@@ -43,11 +43,17 @@ const Register = () => {
 
     // Mock registration - replace with actual registration logic
     setTimeout(() => {
-      localStorage.setItem("user", JSON.stringify({ 
-        email: formData.email, 
+      const userData = {
+        email: formData.email,
         name: formData.name,
-        userType: formData.userType 
-      }));
+        userType: formData.userType,
+        joinDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        enrolledCourses: [],
+        completedCourses: [],
+        certificates: [],
+        progress: {}
+      };
+      localStorage.setItem("user", JSON.stringify(userData));
       toast.success("Account created successfully! Welcome to SkillKaska.");
       navigate("/dashboard");
       setIsLoading(false);
