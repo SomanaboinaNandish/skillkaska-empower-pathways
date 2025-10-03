@@ -154,6 +154,19 @@ const Login = () => {
                 <div className="flex justify-center">
                   <Shield className="h-16 w-16 text-primary" />
                 </div>
+
+                {/* Display Generated OTP for Demo */}
+                <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 text-center">
+                  <p className="text-sm font-medium text-green-700 mb-2">
+                    🔐 Your OTP Code (Demo Mode)
+                  </p>
+                  <p className="text-3xl font-bold text-green-900 tracking-widest">
+                    {generatedOTP}
+                  </p>
+                  <p className="text-xs text-green-600 mt-2">
+                    In production, this would be sent to: {email}
+                  </p>
+                </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="otp" className="text-center block">Enter OTP</Label>
@@ -174,7 +187,7 @@ const Login = () => {
                     </InputOTP>
                   </div>
                   <p className="text-sm text-center text-muted-foreground mt-2">
-                    Check your email for the verification code
+                    Enter the 6-digit code shown above
                   </p>
                 </div>
 
