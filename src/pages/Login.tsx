@@ -5,24 +5,47 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
-import { Eye, EyeOff, GraduationCap } from "lucide-react";
+import { Eye, EyeOff, GraduationCap, Shield } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showOTP, setShowOTP] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [generatedOTP, setGeneratedOTP] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Mock authentication - replace with actual auth logic
+    // Mock authentication - Step 1: Verify credentials
     setTimeout(() => {
       if (email && password) {
-        // Store actual user data instead of hardcoded values
+        // Generate 6-digit OTP
+        const mockOTP = Math.floor(100000 + Math.random() * 900000).toString();
+        setGeneratedOTP(mockOTP);
+        setShowOTP(true);
+        toast.success(`OTP sent to ${email}: ${mockOTP}`);
+      } else {
+        toast.error("Please fill in all fields");
+      }
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  const handleOTPVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Mock OTP verification
+    setTimeout(() => {
+      if (otp === generatedOTP) {
+        // Store actual user data
         const userData = {
           email,
           name: email === "demo@skillkaska.org" ? "Demo User" : email.split('@')[0],
@@ -36,10 +59,16 @@ const Login = () => {
         toast.success("Welcome back! You've successfully logged in.");
         navigate("/dashboard");
       } else {
-        toast.error("Please fill in all fields");
+        toast.error("Invalid OTP. Please try again.");
       }
       setIsLoading(false);
     }, 1000);
+  };
+
+  const handleBackToLogin = () => {
+    setShowOTP(false);
+    setOtp("");
+    setGeneratedOTP("");
   };
 
   return (
@@ -56,65 +85,119 @@ const Login = () => {
 
         <Card>
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Sign In</CardTitle>
+            <CardTitle className="text-2xl text-center">
+              {showOTP ? "Verify OTP" : "Sign In"}
+            </CardTitle>
             <CardDescription className="text-center">
-              Enter your credentials to access your account
+              {showOTP 
+                ? "Enter the 6-digit code sent to your email" 
+                : "Enter your credentials to access your account"}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
+            {!showOTP ? (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
                   <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Sending OTP..." : "Continue with OTP"}
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={handleOTPVerify} className="space-y-6">
+                <div className="flex justify-center">
+                  <Shield className="h-16 w-16 text-primary" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="otp" className="text-center block">Enter OTP</Label>
+                  <div className="flex justify-center">
+                    <InputOTP
+                      maxLength={6}
+                      value={otp}
+                      onChange={(value) => setOtp(value)}
+                    >
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                  <p className="text-sm text-center text-muted-foreground mt-2">
+                    Check your email for the verification code
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isLoading || otp.length !== 6}
+                  >
+                    {isLoading ? "Verifying..." : "Verify & Sign In"}
+                  </Button>
+                  
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleBackToLogin}
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    Back to Login
                   </Button>
                 </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-primary hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
+              </form>
+            )}
 
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
@@ -126,11 +209,13 @@ const Login = () => {
             </div>
 
             {/* Demo credentials */}
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-xs text-blue-700 font-medium mb-1">Demo credentials:</p>
-              <p className="text-xs text-blue-600">Email: demo@skillkaska.org</p>
-              <p className="text-xs text-blue-600">Password: demo123</p>
-            </div>
+            {!showOTP && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-xs text-blue-700 font-medium mb-1">Demo credentials:</p>
+                <p className="text-xs text-blue-600">Email: demo@skillkaska.org</p>
+                <p className="text-xs text-blue-600">Password: demo123</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
